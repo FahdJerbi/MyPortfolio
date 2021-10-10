@@ -1,0 +1,1416 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <title>Projet SIG-Web</title>
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+
+        <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" />
+        <!-- Font Awesome icons (free version)-->
+        <script src="https://use.fontawesome.com/releases/v5.15.3/js/all.js" crossorigin="anonymous"></script>
+        <!-- Google fonts-->
+        <link href="https://fonts.googleapis.com/css?family=Saira+Extra+Condensed:500,700" rel="stylesheet" type="text/css" />
+        <link href="https://fonts.googleapis.com/css?family=Muli:400,400i,800,800i" rel="stylesheet" type="text/css" />
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="css/styles.css" rel="stylesheet" />
+        <style>
+        #map {
+            width: 1000px;
+            height: 500px;
+        }
+        </style>
+        <title></title>
+    </head>
+    
+            <!-- Project Description -->
+            <div class="container-md">
+                <center>
+                    <p class="h2">SIG Web pour la commune de Béja</p>
+                    <h4>
+                    Description du porjet:
+                    <small class="text-muted">le but de ce projet est d'analyser les lieux les plus proches pour accéder aux établissements de loisirs de la ville de Béja, ce projet a été réalisé en utilisant "Network Analysis".</small>
+                    </h4>
+                </center>
+            </div>
+            
+    <body>
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="sideNav">
+           <a class="navbar-brand js-scroll-trigger" href="#page-top"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button> 
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link js-scroll-trigger" href="index.html">Retour aux projets</a></li>
+                    <li class="nav-item"><a class="nav-link js-scroll-trigger" href="https://www.linkedin.com/in/fahd-jerbi/">Profile LinekdIn</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Map -->
+
+        <center><div id="map">
+        </div></center>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet-svg-shape-markers.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/gouv_1.js"></script>
+        <script src="data/PAU_Bja_2.js"></script>
+        <script src="data/RteBeja_3.js"></script>
+        <script src="data/ZoneDesserte_4.js"></script>
+        <script src="data/Eqpmts_5.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[36.709822755468956,9.146147109595093],[36.74804430814434,9.234952283178142]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_OpenStreetMap_0');
+        map.getPane('pane_OpenStreetMap_0').style.zIndex = 400;
+        var layer_OpenStreetMap_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OpenStreetMap_0;
+        map.addLayer(layer_OpenStreetMap_0);
+        function pop_gouv_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">INS_gouv</th>\
+                        <td>' + (feature.properties['INS_gouv'] !== null ? autolinker.link(feature.properties['INS_gouv'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">nom_gouv</th>\
+                        <td>' + (feature.properties['nom_gouv'] !== null ? autolinker.link(feature.properties['nom_gouv'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">surf_gouv</th>\
+                        <td>' + (feature.properties['surf_gouv'] !== null ? autolinker.link(feature.properties['surf_gouv'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_gouv_1_0() {
+            return {
+                pane: 'pane_gouv_1',
+                opacity: 1,
+                color: 'rgba(77,77,77,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0, 
+                fillOpacity: 0,
+                interactive: false,
+            }
+        }
+        map.createPane('pane_gouv_1');
+        map.getPane('pane_gouv_1').style.zIndex = 401;
+        map.getPane('pane_gouv_1').style['mix-blend-mode'] = 'normal';
+        var layer_gouv_1 = new L.geoJson(json_gouv_1, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_gouv_1',
+            layerName: 'layer_gouv_1',
+            pane: 'pane_gouv_1',
+            onEachFeature: pop_gouv_1,
+            style: style_gouv_1_0,
+        });
+        bounds_group.addLayer(layer_gouv_1);
+        map.addLayer(layer_gouv_1);
+        function pop_PAU_Bja_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Type</th>\
+                        <td>' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Shape_Area</th>\
+                        <td>' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_PAU_Bja_2_0(feature) {
+            switch(String(feature.properties['Type'])) {
+                case 'A':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(74,48,224,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'AM':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,38,228,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'B':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(118,135,219,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'BE':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(42,216,193,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'CE':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(34,240,192,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'CFP':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(117,44,201,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'CG':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(193,223,39,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'CL':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(193,223,39,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'CNSS':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(113,119,209,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'CO':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,203,27,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'CRD1':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,191,207,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'D':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(218,138,238,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'DREH':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(225,78,176,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'E':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,88,90,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'EP':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,88,90,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'Es':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(81,203,28,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'F':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(234,228,116,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'G':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,58,112,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'GN':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,81,221,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'HR':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(94,138,208,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'IS':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,238,94,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'JE':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(80,73,224,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'JF':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(151,124,226,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'L':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(137,240,161,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'M':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(56,201,121,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'MC':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(89,229,54,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'MUC':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(130,86,206,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'O':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(154,223,35,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'P':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(154,223,35,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'PT1':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(127,212,120,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'PTT':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,141,73,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'RCD':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,93,152,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'S':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(81,175,237,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'SF':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(51,213,105,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'SO':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(185,126,227,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'SS':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,27,49,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'ST':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(75,230,176,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'T':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(225,120,45,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'TJ':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(128,193,221,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'TT':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(222,140,119,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UA3':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,51,33,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UAa':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(103,219,229,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UAa1':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(25,77,218,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UAa3':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(232,204,126,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'Uaa4':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(85,204,87,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UAa4':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(180,234,29,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UAc1':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(214,73,12,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UAc3':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,223,53,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UBa3':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(42,207,61,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UBa4':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(210,93,197,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UBb':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(224,21,180,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UIa':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,180,79,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UIb':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(203,65,97,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'UPa':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,17,211,1.0)',
+                interactive: false,
+            }
+                    break;
+                case 'ZM':
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(102,216,165,1.0)',
+                interactive: false,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_PAU_Bja_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,77,150,1.0)',
+                interactive: false,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_PAU_Bja_2');
+        map.getPane('pane_PAU_Bja_2').style.zIndex = 402;
+        map.getPane('pane_PAU_Bja_2').style['mix-blend-mode'] = 'normal';
+        var layer_PAU_Bja_2 = new L.geoJson(json_PAU_Bja_2, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_PAU_Bja_2',
+            layerName: 'layer_PAU_Bja_2',
+            pane: 'pane_PAU_Bja_2',
+            onEachFeature: pop_PAU_Bja_2,
+            style: style_PAU_Bja_2_0,
+        });
+        bounds_group.addLayer(layer_PAU_Bja_2);
+        map.addLayer(layer_PAU_Bja_2);
+        function pop_RteBeja_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['full_id'] !== null ? autolinker.link(feature.properties['full_id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['osm_id'] !== null ? autolinker.link(feature.properties['osm_id'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['osm_type'] !== null ? autolinker.link(feature.properties['osm_type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['highway'] !== null ? autolinker.link(feature.properties['highway'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['oneway'] !== null ? autolinker.link(feature.properties['oneway'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ref'] !== null ? autolinker.link(feature.properties['ref'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['junction'] !== null ? autolinker.link(feature.properties['junction'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['name_fr'] !== null ? autolinker.link(feature.properties['name_fr'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['name'] !== null ? autolinker.link(feature.properties['name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['name_ar'] !== null ? autolinker.link(feature.properties['name_ar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ref_ar'] !== null ? autolinker.link(feature.properties['ref_ar'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['bridge'] !== null ? autolinker.link(feature.properties['bridge'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['layer'] !== null ? autolinker.link(feature.properties['layer'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['service'] !== null ? autolinker.link(feature.properties['service'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['access'] !== null ? autolinker.link(feature.properties['access'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['motor_vehi'] !== null ? autolinker.link(feature.properties['motor_vehi'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['surface'] !== null ? autolinker.link(feature.properties['surface'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['tracktype'] !== null ? autolinker.link(feature.properties['tracktype'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['addr_city'] !== null ? autolinker.link(feature.properties['addr_city'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['addr_postc'] !== null ? autolinker.link(feature.properties['addr_postc'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['addr_stree'] !== null ? autolinker.link(feature.properties['addr_stree'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['covered'] !== null ? autolinker.link(feature.properties['covered'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Length_m_'] !== null ? autolinker.link(feature.properties['Length_m_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Leng'] !== null ? autolinker.link(feature.properties['Shape_Leng'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Speed'] !== null ? autolinker.link(feature.properties['Speed'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Minutes'] !== null ? autolinker.link(feature.properties['Minutes'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_RteBeja_3_0(feature) {
+            switch(String(feature.properties['highway'])) {
+                case '[\'primary\', \'primary_link\', \'trunk\']':
+                    return {
+                pane: 'pane_RteBeja_3',
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '[\'residential\', \'service\', \'tertiary\', \'tertiary_link\', \'trunk_link\', \'unclassified\', \'footway\', \'path\', \'pedestrian\']':
+                    return {
+                pane: 'pane_RteBeja_3',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_RteBeja_3',
+                opacity: 1,
+                color: 'rgba(63,134,16,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case '[\'secondary_link\', \'secondary\']':
+                    return {
+                pane: 'pane_RteBeja_3',
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_RteBeja_3');
+        map.getPane('pane_RteBeja_3').style.zIndex = 403;
+        map.getPane('pane_RteBeja_3').style['mix-blend-mode'] = 'normal';
+        var layer_RteBeja_3 = new L.geoJson(json_RteBeja_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_RteBeja_3',
+            layerName: 'layer_RteBeja_3',
+            pane: 'pane_RteBeja_3',
+            onEachFeature: pop_RteBeja_3,
+            style: style_RteBeja_3_0,
+        });
+        bounds_group.addLayer(layer_RteBeja_3);
+        map.addLayer(layer_RteBeja_3);
+        function pop_ZoneDesserte_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ToBreak'] !== null ? autolinker.link(feature.properties['ToBreak'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Shape_Area'] !== null ? autolinker.link(feature.properties['Shape_Area'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_ZoneDesserte_4_0(feature) {
+            if (feature.properties['ToBreak'] >= 167.454063 && feature.properties['ToBreak'] <= 300.000000 ) {
+                return {
+                pane: 'pane_ZoneDesserte_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.9)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,245,235,0.9)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['ToBreak'] >= 300.000000 && feature.properties['ToBreak'] <= 319.939240 ) {
+                return {
+                pane: 'pane_ZoneDesserte_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.9)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,210,166,0.9)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['ToBreak'] >= 319.939240 && feature.properties['ToBreak'] <= 500.000000 ) {
+                return {
+                pane: 'pane_ZoneDesserte_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.9)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,146,67,0.9)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['ToBreak'] >= 500.000000 && feature.properties['ToBreak'] <= 700.000000 ) {
+                return {
+                pane: 'pane_ZoneDesserte_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.9)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(223,79,5,0.9)',
+                interactive: true,
+            }
+            }
+            if (feature.properties['ToBreak'] >= 700.000000 && feature.properties['ToBreak'] <= 900.000000 ) {
+                return {
+                pane: 'pane_ZoneDesserte_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,0.9)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(177,65,20,0.9)',
+                interactive: true,
+            }
+            }
+        }
+        map.createPane('pane_ZoneDesserte_4');
+        map.getPane('pane_ZoneDesserte_4').style.zIndex = 404;
+        map.getPane('pane_ZoneDesserte_4').style['mix-blend-mode'] = 'normal';
+        var layer_ZoneDesserte_4 = new L.geoJson(json_ZoneDesserte_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ZoneDesserte_4',
+            layerName: 'layer_ZoneDesserte_4',
+            pane: 'pane_ZoneDesserte_4',
+            onEachFeature: pop_ZoneDesserte_4,
+            style: style_ZoneDesserte_4_0,
+        });
+        bounds_group.addLayer(layer_ZoneDesserte_4);
+        map.addLayer(layer_ZoneDesserte_4);
+        function pop_Eqpmts_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['OBJECTID'] !== null ? autolinker.link(feature.properties['OBJECTID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Nom</th>\
+                        <td>' + (feature.properties['Nom'] !== null ? autolinker.link(feature.properties['Nom'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Type</th>\
+                        <td>' + (feature.properties['Type'] !== null ? autolinker.link(feature.properties['Type'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Eqpmts_5_0() {
+            return {
+                pane: 'pane_Eqpmts_5',
+                shape: 'diamond',
+                radius: 8.8,
+                opacity: 1,
+                color: 'rgba(61,128,53,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,234,1,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Eqpmts_5');
+        map.getPane('pane_Eqpmts_5').style.zIndex = 405;
+        map.getPane('pane_Eqpmts_5').style['mix-blend-mode'] = 'normal';
+        var layer_Eqpmts_5 = new L.geoJson(json_Eqpmts_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Eqpmts_5',
+            layerName: 'layer_Eqpmts_5',
+            pane: 'pane_Eqpmts_5',
+            onEachFeature: pop_Eqpmts_5,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Eqpmts_5_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Eqpmts_5);
+        map.addLayer(layer_Eqpmts_5);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/Eqpmts_5.png" /> Eqpmts': layer_Eqpmts_5,'ZoneDesserte<br /><table><tr><td style="text-align: center;"><img src="legend/ZoneDesserte_4_1673000.png" /></td><td>167 - 300 </td></tr><tr><td style="text-align: center;"><img src="legend/ZoneDesserte_4_3003201.png" /></td><td>300 - 320 </td></tr><tr><td style="text-align: center;"><img src="legend/ZoneDesserte_4_3205002.png" /></td><td>320 - 500 </td></tr><tr><td style="text-align: center;"><img src="legend/ZoneDesserte_4_5007003.png" /></td><td>500 - 700 </td></tr><tr><td style="text-align: center;"><img src="legend/ZoneDesserte_4_7009004.png" /></td><td>700 - 900 </td></tr></table>': layer_ZoneDesserte_4,'RteBeja<br /><table><tr><td style="text-align: center;"><img src="legend/RteBeja_3_primaryprimarylinktrunk0.png" /></td><td>primary,primary_link,trunk</td></tr><tr><td style="text-align: center;"><img src="legend/RteBeja_3_residentialservicetertiarytertiarylinktrunklinkunclassifiedfootwaypathpedestrian1.png" /></td><td>residential,service,tertiary,tertiary_link,trunk_link,unclassified,footway,path,pedestrian</td></tr><tr><td style="text-align: center;"><img src="legend/RteBeja_3_2.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/RteBeja_3_secondarylinksecondary3.png" /></td><td>secondary_link,secondary</td></tr></table>': layer_RteBeja_3,'PAU_Béja<br /><table><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_A0.png" /></td><td>A</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_AM1.png" /></td><td>AM</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_B2.png" /></td><td>B</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_BE3.png" /></td><td>BE</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_CE4.png" /></td><td>CE</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_CFP5.png" /></td><td>CFP</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_CG6.png" /></td><td>CG</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_CL7.png" /></td><td>CL</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_CNSS8.png" /></td><td>CNSS</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_CO9.png" /></td><td>CO</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_CRD110.png" /></td><td>CRD1</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_D11.png" /></td><td>D</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_DREH12.png" /></td><td>DREH</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_E13.png" /></td><td>E</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_EP14.png" /></td><td>EP</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_Es15.png" /></td><td>Es</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_F16.png" /></td><td>F</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_G17.png" /></td><td>G</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_GN18.png" /></td><td>GN</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_HR19.png" /></td><td>HR</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_IS20.png" /></td><td>IS</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_JE21.png" /></td><td>JE</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_JF22.png" /></td><td>JF</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_L23.png" /></td><td>L</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_M24.png" /></td><td>M</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_MC25.png" /></td><td>MC</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_MUC26.png" /></td><td>MUC</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_O27.png" /></td><td>O</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_P28.png" /></td><td>P</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_PT129.png" /></td><td>PT1</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_PTT30.png" /></td><td>PTT</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_RCD31.png" /></td><td>RCD</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_S32.png" /></td><td>S</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_SF33.png" /></td><td>SF</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_SO34.png" /></td><td>SO</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_SS35.png" /></td><td>SS</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_ST36.png" /></td><td>ST</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_T37.png" /></td><td>T</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_TJ38.png" /></td><td>TJ</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_TT39.png" /></td><td>TT</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UA340.png" /></td><td>UA3</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UAa41.png" /></td><td>UAa</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UAa142.png" /></td><td>UAa1</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UAa343.png" /></td><td>UAa3</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_Uaa444.png" /></td><td>Uaa4</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UAa445.png" /></td><td>UAa4</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UAc146.png" /></td><td>UAc1</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UAc347.png" /></td><td>UAc3</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UBa348.png" /></td><td>UBa3</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UBa449.png" /></td><td>UBa4</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UBb50.png" /></td><td>UBb</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UIa51.png" /></td><td>UIa</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UIb52.png" /></td><td>UIb</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_UPa53.png" /></td><td>UPa</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_ZM54.png" /></td><td>ZM</td></tr><tr><td style="text-align: center;"><img src="legend/PAU_Bja_2_55.png" /></td><td></td></tr></table>': layer_PAU_Bja_2,'<img src="legend/gouv_1.png" /> gouv': layer_gouv_1,"OpenStreetMap": layer_OpenStreetMap_0,}).addTo(map);
+        setBounds();
+        </script>
+    </body>
+</html>
